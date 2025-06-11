@@ -18,6 +18,7 @@ main()
   .then((db) => {
     var indexRouter = require("./routes/index");
     var usersRouter = require("./routes/users")(db);
+    var todosRouter = require("./routes/todos")(db);
 
     var app = express();
 
@@ -29,6 +30,7 @@ main()
 
     app.use("/", indexRouter);
     app.use("/users", usersRouter);
+    app.use("/todos", todosRouter);
 
     var debug = require("debug")("mongodb-async-breads-api:server");
     var http = require("http");

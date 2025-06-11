@@ -2,68 +2,74 @@ var express = require("express");
 const { ObjectId } = require("mongodb");
 var router = express.Router();
 
+// GET / - Browse, Search, Sort, Pagination
 module.exports = function (db) {
   const User = db.collection("users");
-
-  // GET / - Browse, Search, Sort, Pagination
   router.get("/", async function (req, res) {
     try {
       const {
-        search = "",
+        query = "",
         page = 1,
-        sortMode = "asc",
-        sortBy = "name",
         limit: limitQuery = "all",
+        sortMode = "asc",
+        sortBy = "_id",
       } = req.query;
 
       let params = {};
-      if (search.trim() !== "") {
+      if (query.trim() !== "") {
         params = {
           $or: [
-            { name: { $regex: search, $options: "i" } },
-            { phone: { $regex: search, $options: "i" } },
+            { name: { $regex: query, $options: "i" } },
+            { phone: { $regex: query, $options: "i" } },
           ],
         };
       }
 
       const allowedLimits = ["5", "10", "all"];
       const isValidLimit = allowedLimits.includes(limitQuery);
-      const limit = isValidLimit && limitQuery !== "all" ? parseInt(limitQuery) : 0;
-      const skip = limit > 0 ? (parseInt(page) - 1) * limit : 0;
+      const limit =
+        isValidLimit && limitQuery !== "all" ? parseInt(limitQuery) : 0;
+      const pageInt = parseInt(page) || 1;
+      const offset = limit > 0 ? (pageInt - 1) * limit : 0;
 
       const sort = {
         [sortBy]: sortMode === "desc" ? -1 : 1,
       };
 
-      const totalData = await User.countDocuments(params);
-      const totalPages = limit > 0 ? Math.ceil(totalData / limit) : 1;
+      const total = await User.countDocuments(params);
+      const pages = limit > 0 ? Math.ceil(total / limit) : 1;
 
       const users = await User.find(params)
         .sort(sort)
-        .skip(skip)
+        .skip(offset)
         .limit(limit)
         .toArray();
 
-      res.json({
+      res.status(200).json({
         data: users,
-        page: parseInt(page),
-        totalPages,
-        totalData,
+        total,
+        pages,
+        page: pageInt,
+        limit,
+        offset,
       });
     } catch (e) {
       res.status(500).json({ message: e.message });
     }
   });
 
-  // GET /:id - Read
+  // GET /:id - Detail user
   router.get("/:id", async function (req, res) {
     try {
-      const id = req.params.id;
-      const user = await User.findOne({ _id: new ObjectId(id) });
+      const { id } = req.params;
+      const _id = new ObjectId(id);
+      const user = await User.findOne({ _id });
+
       if (!user) return res.status(404).json({ message: "User not found" });
-      res.json(user);
-    } catch (e) {
-      res.status(500).json({ message: e.message });
+
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   });
 
@@ -80,31 +86,34 @@ module.exports = function (db) {
   });
 
   // PUT /:id - Edit
-  router.put("/:id", async function (req, res) {
+  router.put("/:id", async function (req, res, next) {
     try {
-      const id = req.params.id;
-      const { name, phone } = req.body;
-      const result = await User.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: { name, phone } }
-      );
-      if (result.matchedCount === 0) return res.status(404).json({ message: "User not found" });
-      const updatedUser = await User.findOne({ _id: new ObjectId(id) });
-      res.json(updatedUser);
-    } catch (e) {
-      res.status(500).json({ message: e.message });
+      const { id } = req.params;
+      const _id = new ObjectId(id);
+
+      await User.updateOne({ _id }, { $set: req.body });
+      const user = await User.findOne({ _id });
+
+      res.status(201).json(user);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   });
 
   // DELETE /:id - Delete
   router.delete("/:id", async function (req, res) {
     try {
-      const id = req.params.id;
-      const result = await User.deleteOne({ _id: new ObjectId(id) });
-      if (result.deletedCount === 0) return res.status(404).json({ message: "User not found" });
-      res.json({ message: "User deleted successfully" });
-    } catch (e) {
-      res.status(500).json({ message: e.message });
+      const { id } = req.params;
+      const _id = new ObjectId(id);
+
+      const user = await User.findOne({ _id });
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      await User.deleteOne({ _id });
+
+      res.status(200).json(user);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
   });
 

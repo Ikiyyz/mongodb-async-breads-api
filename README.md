@@ -28,12 +28,13 @@ Built with **MongoDB**, **Bootstrap**, and other modern technologies, this app e
 
 ## 🛠️ Technologies Used
 
-| Technology      | Purpose                     |
-| --------------- | --------------------------- |
-| **Node.js**     | Backend server              |
-| **Express.js**  | Routing framework           |
-| **MongoDB**     | NoSQL database              |
-| **Bootstrap**   | CSS framework for styling   |
-| **FontAwesome** | Icons for better UI         |
-| **Moment.js**   | Date and time manipulation  |
-| **jQuery**      | Simplified DOM manipulation |
+| Technology      | Purpose                         |
+| --------------- | ------------------------------- |
+| **Node.js**     | Backend server                  |
+| **Express.js**  | Routing framework               |
+| **MongoDB**     | NoSQL database                  |
+| **Bootstrap**   | CSS framework for styling       |
+| **FontAwesome** | Icons for better UI             |
+| **Moment.js**   | Date and time manipulation      |
+| **jQuery**      | Simplified DOM manipulation     |
+| **Vanilla JS**  | User interface for `index.html` |

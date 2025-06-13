@@ -1,0 +1,368 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="/fontawesome/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header text-center">
+                <h2>Todo List</h2>
+            </div>
+            <div class="card-body">
+                <!-- Search Form -->
+                <div class="row mb-3">
+                    <label for="search-title" class="col-sm-2 col-form-label">Title</label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" id="search-title" placeholder="Insert your title">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label for="deadline" class="col-sm-2 col-form-label">Deadline</label>
+                    <div class="col-sm-10 d-flex justify-content-between">
+                        <div class="col-sm-5">
+                            <input type="date" class="form-control" id="search-startdate">
+                        </div>
+                        <div>
+                            s.d
+                        </div>
+                        <div class="col-sm-5">
+                            <input type="date" class="form-control" id="search-enddate">
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="search-complete" class="col-sm-2 col-form-label">Complete</label>
+                    <div class="col-sm-10">
+                        <select class="form-select" id="search-complete">
+                            <option value="" selected>-complete-</option>
+                            <option value="true">Done</option>
+                            <option value="false">Not Yet</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div id="sort-button" class="col-auto"></div>
+                    <div class="col-auto">
+                        <div class="row gx-1">
+                            <div class="col-auto">
+                                <button type="button" onclick="reset()" class="btn btn-warning text-dark px-3 py-2">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" onclick="searching()" class="btn btn-info text-dark px-3 py-2">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Insert Form -->
+            <form id="insert-form">
+                <div class="card-footer">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="titleInput" placeholder="title">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="fa-solid fa-circle-arrow-down"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="mt-2 mb-2">
+                <div id="sentinel"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Edit -->
+    <div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-edit">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="formLabel">Update Todo</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <label for="title-edit" class="col-sm-2 col-form-label">Title</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="title-edit">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="deadline" class="col-sm-2 col-form-label">Deadline</label>
+                            <div class="col-sm-10">
+                                <input type="datetime-local" class="form-control" id="deadline-edit">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-10">
+                                <input class="form-check-input" type="checkbox" id="complete-edit">
+                                <label class="form-check-label" for="complete-edit">Done</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Delete Confirmation -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="deleteModalLabel">Delete Confirmation</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">Are you sure?</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                    <button type="button" class="btn btn-primary" onclick="removeData()">Yes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pathSegments = window.location.pathname.split('/');
+        const userId = pathSegments[2];
+
+        // global state variables
+        let deletedId = null;
+        let editedId = null;
+
+        let params = {
+            sortBy: "_id",
+            sortMode: "desc",
+            page: 1
+        };
+
+        $(document).ready(function () {
+            $('#insert-form').on('submit', function (e) {
+                e.preventDefault();
+                saveData();
+            });
+
+            $('#form-edit').on('submit', function (e) {
+                e.preventDefault();
+                saveData();
+            });
+
+            loadData();
+
+            // pagination observer
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    if (params.page < params.pages) {
+                        params.page += 1;
+                        loadData();
+                    }
+                }
+            });
+
+            observer.observe(document.getElementById("sentinel"));
+        });
+
+        const formModal = new bootstrap.Modal('#formModal', { keyboard: false });
+        const deleteModal = new bootstrap.Modal('#deleteModal', { keyboard: false });
+
+        const reset = () => {
+            $('#search-title').val("");
+            $('#search-startdate').val("");
+            $('#search-enddate').val("");
+            $('#search-complete').val("");
+
+            // reset search parameters
+            delete params.title;
+            delete params.startdate;
+            delete params.enddate;
+            delete params.complete;
+            params.page = 1;
+
+            loadData(true);
+        };
+
+        const searching = () => {
+            const searchTitle = $('#search-title').val().trim();
+            const searchStartDate = $('#search-startdate').val();
+            const searchEndDate = $('#search-enddate').val();
+            const searchComplete = $('#search-complete').val();
+
+            params = { ...params, page: 1 };
+
+            if (searchTitle) params.title = searchTitle;
+            if (searchStartDate) params.startdate = searchStartDate;
+            if (searchEndDate) params.enddate = searchEndDate;
+            if (searchComplete) params.complete = searchComplete;
+
+            // clean up empty parameters
+            if (!searchTitle) delete params.title;
+            if (!searchStartDate) delete params.startdate;
+            if (!searchEndDate) delete params.enddate;
+            if (!searchComplete) delete params.complete;
+
+            loadData(true);
+        };
+
+        const loadData = (isReset = false) => {
+            if (isReset) {
+                $('#sentinel').prevAll().remove();
+                params.page = 1;
+            }
+
+            // check pagination limit
+            if (params.pages && params.page > params.pages) return;
+
+            const queryParams = new URLSearchParams(params).toString();
+            const apiUrl = `http://localhost:3000/users/${userId}/todos?${queryParams}`;
+
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                dataType: 'json',
+            }).done(function (todos) {
+                let htmlContent = '';
+                const currentTime = moment();
+
+                todos.data.forEach(todoItem => {
+                    const deadlineTime = moment(todoItem.deadline);
+                    let alertClass = "dark";
+
+                    if (todoItem.complete) {
+                        alertClass = "success";
+                    } else if (deadlineTime.isBefore(currentTime)) {
+                        alertClass = "danger";
+                    }
+
+                    htmlContent += `
+                        <div class="alert alert-${alertClass} d-flex justify-content-between align-items-center mb-3">
+                            ${deadlineTime.format("DD-MM-YYYY HH:mm")} ${todoItem.title}
+                            <div>
+                                <button class="btn btn-sm" onclick="editData('${todoItem._id}')"><i class="fa-solid fa-pencil"></i></button>
+                                <button class="btn btn-sm" onclick="deletedData('${todoItem._id}')"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                $('#sentinel').before(htmlContent);
+                params.pages = todos.pages;
+                buildSortButton();
+            }).fail(function (error) {
+                console.log('Error loading data:', error);
+            });
+        };
+
+        const saveData = () => {
+            if (editedId) {
+                // update existing todo
+                const todoTitle = $('#title-edit').val();
+                const todoDeadline = moment($('#deadline-edit').val()).toISOString();
+                const todoComplete = $('#complete-edit').is(':checked');
+
+                $.ajax({
+                    url: `http://localhost:3000/users/${userId}/todos/${editedId}`,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        title: todoTitle,
+                        deadline: todoDeadline,
+                        complete: todoComplete
+                    }),
+                    success: function () {
+                        formModal.hide();
+                        editedId = null;
+                        loadData(true);
+                    }
+                });
+            } else {
+                // create new todo
+                const newTitle = $('#titleInput').val();
+
+                $.ajax({
+                    url: `http://localhost:3000/users/${userId}/todos`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ title: newTitle }),
+                    success: function () {
+                        $('#titleInput').val('');
+                        loadData(true);
+                    }
+                });
+            }
+        };
+
+        const deletedData = (todoId) => {
+            deletedId = todoId;
+            deleteModal.show();
+        };
+
+        const removeData = () => {
+            $.ajax({
+                url: `http://localhost:3000/users/${userId}/todos/${deletedId}`,
+                method: 'DELETE',
+                success: function () {
+                    deletedId = null;
+                    deleteModal.hide();
+                    loadData(true);
+                }
+            });
+        };
+
+        const editData = (todoId) => {
+            editedId = todoId;
+
+            $.ajax({
+                url: `http://localhost:3000/users/${userId}/todos/${editedId}`,
+                method: 'GET',
+                dataType: 'json',
+                success: function (todoData) {
+                    $('#title-edit').val(todoData.title);
+                    $('#deadline-edit').val(moment(todoData.deadline).local().format('YYYY-MM-DDTHH:mm'));
+                    $('#complete-edit').prop('checked', todoData.complete === true);
+                    formModal.show();
+                }
+            });
+        };
+
+        const sorting = (sortField, sortOrder) => {
+            params = { ...params, sortBy: sortField, sortMode: sortOrder };
+            loadData(true);
+        };
+
+        const buildSortButton = () => {
+            let buttonHtml = `
+                <button type="button" class="btn btn-success px-4 d-flex align-items-center"
+                    onclick="sorting('deadline', '${params.sortMode === "asc" ? "desc" : "asc"}')">
+                    <i class="fa-solid fa-${params.sortBy === 'deadline' ? params.sortMode === 'asc' ? 'sort-up' : 'sort-down' : 'sort'} me-2"></i>
+                    Sort by deadline
+                </button>
+            `;
+            $('#sort-button').html(buttonHtml);
+        };
+    </script>
+</body>
+
+</html>

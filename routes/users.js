@@ -2,7 +2,6 @@ var express = require("express");
 const { ObjectId } = require("mongodb");
 var router = express.Router();
 
-// GET / - Browse, Search, Sort, Pagination
 module.exports = function (db) {
   const User = db.collection("users");
   router.get("/", async function (req, res) {
@@ -58,7 +57,6 @@ module.exports = function (db) {
     }
   });
 
-  // GET /:id - Detail user
   router.get("/:id", async function (req, res) {
     try {
       const { id } = req.params;
@@ -73,7 +71,6 @@ module.exports = function (db) {
     }
   });
 
-  // POST / - Add
   router.post("/", async function (req, res) {
     try {
       const { name, phone } = req.body;
@@ -85,8 +82,7 @@ module.exports = function (db) {
     }
   });
 
-  // PUT /:id - Edit
-  router.put("/:id", async function (req, res, next) {
+  router.put("/:id", async function (req, res) {
     try {
       const { id } = req.params;
       const _id = new ObjectId(id);
@@ -100,7 +96,6 @@ module.exports = function (db) {
     }
   });
 
-  // DELETE /:id - Delete
   router.delete("/:id", async function (req, res) {
     try {
       const { id } = req.params;

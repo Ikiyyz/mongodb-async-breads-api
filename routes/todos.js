@@ -4,137 +4,161 @@ const router = express.Router({ mergeParams: true });
 const path = require("path");
 
 module.exports = function (db) {
-  router.get("/", async (req, res, next) => {
-    const wantsHtml = req.accepts(["html", "json"]) === "html";
-    if (wantsHtml) {
-      return res.sendFile(path.join(__dirname, "../public/todos.html"));
-    }
+    const Todo = db.collection("todos");
 
-    try {
-      const {
-        title,
-        startdate,
-        enddate,
-        complete,
-        sortMode = "asc",
-        sortBy = "deadline",
-        page = "1",
-        limit: limitQuery = "5",
-      } = req.query;
+    router.get("/", async (req, res) => {
+        const wantsHtml = req.accepts(["html", "json"]) === "html";
 
-      const pageInt = parseInt(page) || 1;
-      const allowedLimits = ["5", "10", "all"];
-      const isValidLimit = allowedLimits.includes(limitQuery);
-      const limit =
-        isValidLimit && limitQuery !== "all" ? parseInt(limitQuery) : 0;
-      const skip = limit > 0 ? (pageInt - 1) * limit : 0;
-
-      let params = {};
-
-      if (title) {
-        params.title = new RegExp(title, "i");
-      }
-
-      if (startdate || enddate) {
-        params.deadline = {};
-        if (startdate) {
-          params.deadline.$gte = new Date(startdate);
+        if (wantsHtml) {
+            return res.sendFile(path.join(__dirname, "../public/todos.html"));
         }
-        if (enddate) {
-          params.deadline.$lte = new Date(enddate);
+
+        try {
+            const {
+                title,
+                startdate,
+                enddate,
+                complete,
+                sortMode = "asc",
+                sortBy = "deadline",
+                page = "1",
+            } = req.query;
+
+            const pageInt = parseInt(page) || 1;
+
+            let params = {};
+
+            if (title) {
+                params.title = new RegExp(title, "i");
+            }
+
+            if (startdate || enddate) {
+                params.deadline = {};
+                if (startdate) {
+                    const start = new Date(startdate);
+                    start.setHours(0, 0, 0, 0);
+                    params.deadline.$gte = start;
+                }
+                if (enddate) {
+                    const end = new Date(enddate);
+                    end.setHours(23, 59, 59, 999);
+                    params.deadline.$lte = end;
+                }
+            }
+
+            if (complete === "true") {
+                params.complete = true;
+            } else if (complete === "false") {
+                params.complete = false;
+            }
+
+            const userId = new ObjectId(req.params.userId);
+            params.userId = userId;
+
+            const count = await Todo.countDocuments(params);
+
+            const limit = 10;
+            const offset = limit * (pageInt - 1);
+            const pages = Math.ceil(count / limit);
+
+            const sortParams = {};
+            sortParams[sortBy] = sortMode === "asc" ? 1 : -1;
+
+            const todo = await Todo.find(params)
+                .limit(limit)
+                .skip(offset)
+                .sort(sortParams)
+                .toArray();
+            res
+                .status(200)
+                .json({ data: todo, total: count, pages, page: pageInt, limit });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
-      }
+    });
 
-      if (complete === "true" || complete === "false") {
-        params.complete = complete === "true";
-      }
+    router.get("/:id", async (req, res) => {
+        try {
+            const { userId, id } = req.params;
 
-      const sort = {
-        [sortBy]: sortMode === "desc" ? -1 : 1,
-      };
+            const todo = await Todo.findOne({
+                _id: new ObjectId(id),
+                userId: new ObjectId(userId),
+            });
 
-      const totalData = await Todo.countDocuments(params);
-      const totalPages = limit > 0 ? Math.ceil(totalData / limit) : 1;
+            if (!todo) {
+                return res.status(404).json({ message: "Todo not found" });
+            }
 
-      const todos = await Todo.find(params)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .toArray();
+            res.status(200).json(todo);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
 
-      res.json({
-        data: todos,
-        page: pageInt,
-        totalPages,
-        totalData,
-      });
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  });
+    router.post("/", async (req, res) => {
+        try {
+            const { title } = req.body;
 
-  // GET /:id - Detail todo
-  router.get("/:id", async (req, res) => {
-    try {
-      const todoId = req.params.id;
-      const todo = await db.collection("todos").findOne({
-        _id: ObjectId(todoId),
-      });
+            if (!title) {
+                throw Error("Title is required!");
+            }
 
-      if (!todo) {
-        return res.status(404).json({ message: "Todo not found." });
-      }
+            const deadline = new Date();
+            deadline.setDate(deadline.getDate() + 1);
 
-      res.json(todo);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  });
+            const todo = {
+                title,
+                deadline,
+                complete: false,
+                userId: new ObjectId(req.params.userId),
+            };
 
-  // POST / - Tambah todo (hanya title di body)
-  router.post("/", async (req, res) => {
-    try {
-      const { title } = req.body;
+            const result = await Todo.insertOne(todo);
+            const insertedTodo = await Todo.findOne({ _id: result.insertedId });
 
-      // Validasi title
-      if (!title) {
-        return res.status(400).json({ message: "Title is required." });
-      }
+            res.status(201).json(insertedTodo);
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
 
-      const executorId = req.params.userId;
+    router.put("/:id", async function (req, res) {
+        try {
+            const { id } = req.params;
+            const _id = new ObjectId(id);
 
-      // Validasi executor
-      const user = await db
-        .collection("users")
-        .findOne({ _id: ObjectId(executorId) });
-      if (!user) {
-        return res.status(404).json({ message: "Executor (user) not found." });
-      }
+            const updatedData = { ...req.body };
 
-      // Deadline otomatis: besok
-      const deadline = new Date();
-      deadline.setDate(deadline.getDate() + 1);
+            if (updatedData.deadline) {
+                updatedData.deadline = new Date(updatedData.deadline);
+            }
 
-      const newTodo = {
-        title,
-        complete: false,
-        deadline,
-        executor: ObjectId(executorId),
-      };
+            await Todo.updateOne({ _id }, { $set: updatedData });
+            const todo = await Todo.findOne({ _id });
 
-      const result = await db.collection("todos").insertOne(newTodo);
-      const insertedTodo = await db
-        .collection("todos")
-        .findOne({ _id: result.insertedId });
+            if (!todo) throw Error("Todo not exist!");
 
-      res.status(201).json(insertedTodo);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  });
+            res.status(201).json(todo);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
 
-    // PUT /:id - Edit todo
-    router.put("/:id", async (req, res) => {
-    })
-  return router;
+    router.delete("/:id", async function (req, res) {
+        try {
+            const { id } = req.params;
+            const _id = new ObjectId(id);
+            const todo = await Todo.findOne({ _id });
+
+            if (!todo) throw Error("Todo not exist!");
+            await Todo.deleteOne({ _id });
+
+            res.status(201).json(todo);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+
+    return router;
 };

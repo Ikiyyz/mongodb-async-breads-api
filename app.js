@@ -8,6 +8,7 @@ async function main() {
   const url = "mongodb://localhost:27017";
   const client = new MongoClient(url);
   const dbName = "breadsdb";
+  
   await client.connect();
   console.log("Connected successfully to server");
   const db = client.db(dbName);
@@ -30,7 +31,8 @@ main()
 
     app.use("/", indexRouter);
     app.use("/users", usersRouter);
-    app.use("/todos", todosRouter);
+    app.use("/users/:userId/todos", todosRouter);
+
 
     var debug = require("debug")("mongodb-async-breads-api:server");
     var http = require("http");

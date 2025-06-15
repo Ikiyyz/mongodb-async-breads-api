@@ -1,409 +1,412 @@
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MongoDB BREADS (Browse, Read, Edit, Add, Delete, Sort)</title>
-  <link rel="stylesheet" href="/stylesheets/style.css">
-  <link rel="stylesheet" href="/fontawesome/css/all.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
-    crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB BREADS (Browse, Read, Edit, Add, Delete, Sort)</title>
+    
+    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="/fontawesome/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 
 <body>
-  <div class="container mt-4">
-    <div class="card">
-      <div class="card-header">
-        <h1 class="text-center">
-          MongoDB BREADS (Browse, Read, Edit, Add, Delete, Sort)
-        </h1>
-      </div>
-
-      <div class="card-body">
-        <!-- Controls Section -->
-        <div class="d-flex justify-content-between mb-3">
-          <!-- Show Entries -->
-          <div style="width: 20%">
-            <div class="input-group">
-              <span class="input-group-text">Show</span>
-              <select class="form-select form-select-sm" id="limit">
-                <option value="all">All</option>
-                <option value="5" selected>5</option>
-                <option value="10">10</option>
-              </select>
-              <span class="input-group-text">entries</span>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="text-center">MongoDB BREADS (Browse, Read, Edit, Add, Delete, Sort)</h1>
             </div>
-          </div>
 
-          <!-- Search -->
-          <div style="width: 78%">
-            <div class="input-group">
-              <input type="text" class="form-control" id="search" placeholder="Search..." aria-label="Search" />
-              <button class="btn btn-outline-secondary" type="button" id="btn-search">
-                <i class="fa-solid fa-magnifying-glass"></i>
-              </button>
-              <button class="btn btn-outline-warning" type="button" id="btn-reset">
-                <i class="fa-solid fa-rotate"></i>
-              </button>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div style="width: 20%">
+                        <div class="input-group">
+                            <span class="input-group-text">Show</span>
+                            <select class="form-select form-select-sm" id="limit">
+                                <option value="all">All</option>
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                            </select>
+                            <span class="input-group-text">entries</span>
+                        </div>
+                    </div>
+
+                    <!-- Search -->
+                    <div style="width: 78%">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="search" placeholder="Search..." aria-label="Search">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                            <button class="btn btn-outline-warning" type="button" id="btn-reset">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <table class="table table-striped">
+                    <thead id="table-header"></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
             </div>
-          </div>
+
+            <!-- Footer with Add Button and Pagination -->
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalForm">
+                    <i class="fa-solid fa-plus"></i> Add New
+                </button>
+
+                <div class="d-flex align-items-center gap-3">
+                    <div id="info" class="text-muted small"></div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
         </div>
-
-        <!-- Data Table -->
-        <table class="table table-striped">
-          <thead id="table-header">
-            <!-- Header will be generated dynamically -->
-          </thead>
-          <tbody id="table-body">
-            <!-- Data will be inserted here -->
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Footer with Add Button and Pagination -->
-      <div class="card-footer d-flex justify-content-between align-items-center">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalForm">
-          <i class="fa-solid fa-plus"></i> Add New
-        </button>
-
-        <div class="d-flex align-items-center gap-3">
-          <div id="info" class="text-muted small"></div>
-          <nav aria-label="Page navigation">
-            <ul class="pagination mb-0" id="pagination">
-              <!-- Pagination will be generated dynamically -->
-            </ul>
-          </nav>
-        </div>
-      </div>
     </div>
-  </div>
 
-  <!-- Modal Form for Add/Edit -->
-  <div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalFormLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <form id="user-form">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalFormLabel">User Form</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" id="user-id" />
-            <div class="row mb-3">
-              <label for="user-name" class="col-sm-3 col-form-label">Name</label>
-              <div class="col-sm-9">
-                <input type="text" class="form-control" id="user-name" required />
-              </div>
+    <!-- Modal Form for Add/Edit -->
+    <div class="modal fade" id="modalForm" tabindex="-1" aria-labelledby="modalFormLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="user-form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalFormLabel">User Form</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <input type="hidden" id="user-id">
+                        
+                        <div class="row mb-3">
+                            <label for="user-name" class="col-sm-3 col-form-label">Name</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="user-name" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <label for="user-phone" class="col-sm-3 col-form-label">Phone</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" id="user-phone" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
             </div>
-            <div class="row mb-3">
-              <label for="user-phone" class="col-sm-3 col-form-label">Phone</label>
-              <div class="col-sm-9">
-                <input type="text" class="form-control" id="user-phone" required />
-              </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body">
+                    Are you sure you want to delete this user?
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
+                </div>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              Cancel
-            </button>
-            <button type="submit" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-      </div>
+        </div>
     </div>
-  </div>
 
-  <!-- Delete Confirmation Modal -->
-  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="deleteModalLabel">
-            Delete Confirmation
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to delete this user?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            Cancel
-          </button>
-          <button type="button" class="btn btn-danger" id="confirm-delete">
-            Delete
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+    <script>
 
+        let currentEditId = null;
+        let currentDeleteId = null;
+        
+        let params = {
+            sortBy: "_id",
+            sortMode: "asc",
+            page: 1,
+            limit: "5",
+            query: "",
+        };
 
-  <script>
-    let currentEditId = null;
-    let currentDeleteId = null;
-    let params = {
-      sortBy: "_id",
-      sortMode: "asc",
-      page: 1,
-      limit: "5",
-      query: "",
-    };
+        const formModal = new bootstrap.Modal("#modalForm");
+        const deleteModal = new bootstrap.Modal("#deleteModal");
 
-    const formModal = new bootstrap.Modal("#modalForm");
-    const deleteModal = new bootstrap.Modal("#deleteModal");
+        // DOM Content Load
+        document.addEventListener("DOMContentLoaded", function () {
+            const elements = {
+                form: document.getElementById("user-form"),
+                limit: document.getElementById("limit"),
+                searchBtn: document.getElementById("btn-search"),
+                resetBtn: document.getElementById("btn-reset"),
+                search: document.getElementById("search"),
+                deleteBtn: document.getElementById("confirm-delete")
+            };
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const elements = {
-        form: document.getElementById("user-form"),
-        limit: document.getElementById("limit"),
-        searchBtn: document.getElementById("btn-search"),
-        resetBtn: document.getElementById("btn-reset"),
-        search: document.getElementById("search"),
-        deleteBtn: document.getElementById("confirm-delete")
-      };
+            elements.form.addEventListener("submit", handleFormSubmit);
+            elements.limit.addEventListener("change", handleLimitChange);
+            elements.searchBtn.addEventListener("click", handleSearch);
+            elements.resetBtn.addEventListener("click", handleReset);
+            elements.search.addEventListener("keypress", handleSearchKeypress);
+            elements.deleteBtn.addEventListener("click", handleDelete);
 
-      elements.form.addEventListener("submit", handleFormSubmit);
-      elements.limit.addEventListener("change", e => {
-        params.limit = e.target.value;
-        params.page = 1;
-        loadData();
-      });
-      elements.searchBtn.addEventListener("click", handleSearch);
-      elements.resetBtn.addEventListener("click", handleReset);
-      elements.search.addEventListener("keypress", e => e.key === "Enter" && handleSearch());
-      elements.deleteBtn.addEventListener("click", handleDelete);
-
-      loadData();
-    });
-
-    const openAddForm = () => {
-      currentEditId = null;
-      document.getElementById("user-name").value = "";
-      document.getElementById("user-phone").value = "";
-      formModal.show();
-    };
-
-    const handleReset = () => {
-      document.getElementById("search").value = "";
-      params.query = "";
-      params.page = 1;
-      loadData();
-    };
-
-    const handleSearch = () => {
-      params.query = document.getElementById("search").value.trim();
-      params.page = 1;
-      loadData();
-    };
-
-    const loadData = async () => {
-      try {
-        const response = await fetch(`/users?${new URLSearchParams(params)}`);
-        const result = await response.json();
-
-        renderTable(result.data, result.offset || 0);
-        renderPagination(result.pages, result.page);
-        renderInfo(result);
-
-        params.page = result.page;
-        params.pages = result.pages;
-      } catch (error) {
-        console.error('Error loading data:', error);
-      }
-    };
-
-    const renderTable = (data, offset = 0) => {
-      const tableBody = document.getElementById("table-body");
-
-      if (!data?.length) {
-        tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
-        return;
-      }
-
-      tableBody.innerHTML = data.map((user, index) => `
-    <tr>
-      <td>${offset + index + 1}</td>
-      <td>${user.name}</td>
-      <td>${user.phone}</td>
-      <td>
-        <button type="button" class="btn btn-success p-2 me-1" onclick="editUser('${user._id}')">
-          <i class="fa-solid fa-pencil"></i>
-        </button>
-        <button type="button" class="btn btn-danger p-2 me-1" onclick="confirmDelete('${user._id}')">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-        <button type="button" class="btn btn-warning p-2" onclick="goToTodos('${user._id}')">
-          <i class="fa-solid fa-right-to-bracket"></i>
-        </button>
-      </td>
-    </tr>
-  `).join('');
-
-      renderTableHeader();
-    };
-
-    const renderTableHeader = () => {
-      const getSortIcon = field => {
-        if (params.sortBy !== field) return "fa-sort";
-        return params.sortMode === "asc" ? "fa-sort-up" : "fa-sort-down";
-      };
-
-      document.getElementById("table-header").innerHTML = `
-    <tr>
-      <th>No.</th>
-      <th>
-        <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('name')">
-          Name <i class="fa-solid ${getSortIcon("name")}"></i>
-        </a>
-      </th>
-      <th>
-        <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('phone')">
-          Phone <i class="fa-solid ${getSortIcon("phone")}"></i>
-        </a>
-      </th>
-      <th>Actions</th>
-    </tr>
-  `;
-    };
-
-    const renderPagination = (totalPages, currentPage) => {
-      const pagination = document.getElementById("pagination");
-
-      if (!totalPages || totalPages <= 1) {
-        pagination.innerHTML = "";
-        return;
-      }
-
-      const createPageButton = (page, text, isActive = false) =>
-        `<li class="page-item ${isActive ? "active" : ""}">
-      <button class="page-link" onclick="changePage(${page})">${text}</button>
-    </li>`;
-
-      let html = "";
-
-      // Previous button
-      if (currentPage > 1) {
-        html += `<li class="page-item">
-      <button class="page-link" onclick="changePage(${currentPage - 1})" aria-label="Previous">
-        <span aria-hidden="true">&laquo;</span>
-      </button>
-    </li>`;
-      }
-
-      // Page numbers
-      for (let i = 1; i <= totalPages; i++) {
-        html += createPageButton(i, i, i === currentPage);
-      }
-
-      // Next button
-      if (currentPage < totalPages) {
-        html += `<li class="page-item">
-      <button class="page-link" onclick="changePage(${currentPage + 1})" aria-label="Next">
-        <span aria-hidden="true">&raquo;</span>
-      </button>
-    </li>`;
-      }
-
-      pagination.innerHTML = html;
-    };
-
-    const renderInfo = result => {
-      const info = document.getElementById("info");
-      const { total = 0, page = 1, limit } = result;
-
-      if (total === 0) {
-        info.textContent = "No entries to show.";
-        return;
-      }
-
-      if (limit <= 0) {
-        info.textContent = `Showing 1 to ${total} of ${total} entries`;
-        return;
-      }
-
-      const start = (page - 1) * parseInt(limit) + 1;
-      const end = Math.min(page * parseInt(limit), total);
-      info.textContent = `Showing ${start} to ${end} of ${total} entries`;
-    };
-
-    const handleSort = field => {
-      params.sortBy = field;
-      params.sortMode = params.sortMode === "asc" ? "desc" : "asc";
-      loadData();
-    };
-
-    const changePage = page => {
-      params.page = page;
-      loadData();
-    };
-
-    const handleFormSubmit = async e => {
-      e.preventDefault();
-
-      const name = document.getElementById("user-name").value.trim();
-      const phone = document.getElementById("user-phone").value.trim();
-
-      if (!name || !phone) {
-        alert("Please fill in all fields");
-        return;
-      }
-
-      try {
-        const url = currentEditId ? `/users/${currentEditId}` : "/users";
-        const method = currentEditId ? "PUT" : "POST";
-
-        await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, phone }),
+            loadData();
         });
 
-        formModal.hide();
-        loadData();
-      } catch (error) {
-        console.error('Error submitting form:', error);
-      }
-    };
+        const handleLimitChange = (e) => {
+            params.limit = e.target.value;
+            params.page = 1;
+            loadData();
+        };
 
-    const editUser = async id => {
-      try {
-        const response = await fetch(`/users/${id}`);
-        const user = await response.json();
+        const handleSearchKeypress = (e) => {
+            if (e.key === "Enter") {
+                handleSearch();
+            }
+        };
 
-        currentEditId = id;
-        document.getElementById("user-name").value = user.name;
-        document.getElementById("user-phone").value = user.phone;
-        formModal.show();
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      }
-    };
+        const handleReset = () => {
+            document.getElementById("search").value = "";
+            params.query = "";
+            params.page = 1;
+            loadData();
+        };
 
-    const confirmDelete = id => {
-      currentDeleteId = id;
-      deleteModal.show();
-    };
+        const handleSearch = () => {
+            params.query = document.getElementById("search").value.trim();
+            params.page = 1;
+            loadData();
+        };
 
-    const handleDelete = async () => {
-      if (!currentDeleteId) return;
+        const openAddForm = () => {
+            currentEditId = null;
+            document.getElementById("user-form").reset();
+            formModal.show();
+        };
 
-      try {
-        await fetch(`/users/${currentDeleteId}`, { method: "DELETE" });
-        deleteModal.hide();
-        loadData();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
-    };
+        const loadData = async () => {
+            try {
+                const response = await fetch(`/users?${new URLSearchParams(params)}`);
+                const result = await response.json();
 
-    const goToTodos = userId => {
-      window.location.href = `/users/${userId}/todos`;
-    };
-  </script>
+                renderTable(result.data, result.offset || 0);
+                renderPagination(result.pages, result.page);
+                renderInfo(result);
+
+                params.page = result.page;
+                params.pages = result.pages;
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        };
+
+        // rendering
+        const renderTable = (data, offset = 0) => {
+            const tableBody = document.getElementById("table-body");
+
+            if (!data?.length) {
+                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = data.map((user, index) => `
+                <tr>
+                    <td>${offset + index + 1}</td>
+                    <td>${user.name}</td>
+                    <td>${user.phone}</td>
+                    <td>
+                        <button type="button" class="btn btn-success p-2 me-1" onclick="editUser('${user._id}')">
+                            <i class="fa-solid fa-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-danger p-2 me-1" onclick="confirmDelete('${user._id}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                        <button type="button" class="btn btn-warning p-2" onclick="goToTodos('${user._id}')">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderTableHeader();
+        };
+
+        const renderTableHeader = () => {
+            const getSortIcon = (field) => {
+                if (params.sortBy !== field) return "fa-sort";
+                return params.sortMode === "asc" ? "fa-sort-up" : "fa-sort-down";
+            };
+
+            document.getElementById("table-header").innerHTML = `
+                <tr>
+                    <th>No.</th>
+                    <th>
+                        <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('name')">
+                            Name <i class="fa-solid ${getSortIcon("name")}"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('phone')">
+                            Phone <i class="fa-solid ${getSortIcon("phone")}"></i>
+                        </a>
+                    </th>
+                    <th>Actions</th>
+                </tr>
+            `;
+        };
+
+        const renderPagination = (totalPages, currentPage) => {
+            const pagination = document.getElementById("pagination");
+
+            if (!totalPages || totalPages <= 1) {
+                pagination.innerHTML = "";
+                return;
+            }
+
+            const createPageButton = (page, text, isActive = false) => `
+                <li class="page-item ${isActive ? "active" : ""}">
+                    <button class="page-link" onclick="changePage(${page})">${text}</button>
+                </li>
+            `;
+
+            let html = "";
+
+            // previous
+            if (currentPage > 1) {
+                html += `
+                    <li class="page-item">
+                        <button class="page-link" onclick="changePage(${currentPage - 1})" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </button>
+                    </li>
+                `;
+            }
+
+            // page 
+            for (let i = 1; i <= totalPages; i++) {
+                html += createPageButton(i, i, i === currentPage);
+            }
+
+            // next
+            if (currentPage < totalPages) {
+                html += `
+                    <li class="page-item">
+                        <button class="page-link" onclick="changePage(${currentPage + 1})" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </button>
+                    </li>
+                `;
+            }
+
+            pagination.innerHTML = html;
+        };
+
+        const renderInfo = (result) => {
+            const info = document.getElementById("info");
+            const { total = 0, page = 1, limit } = result;
+
+            if (total === 0) {
+                info.textContent = "No entries to show.";
+                return;
+            }
+
+            if (limit <= 0) {
+                info.textContent = `Showing 1 to ${total} of ${total} entries`;
+                return;
+            }
+
+            const start = (page - 1) * parseInt(limit) + 1;
+            const end = Math.min(page * parseInt(limit), total);
+            info.textContent = `Showing ${start} to ${end} of ${total} entries`;
+        }
+
+        const handleSort = (field) => {
+            params.sortBy = field;
+            params.sortMode = params.sortMode === "asc" ? "desc" : "asc";
+            loadData();
+        };
+
+        const changePage = (page) => {
+            params.page = page;
+            loadData();
+        };
+
+        // crud
+        const handleFormSubmit = async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("user-name").value.trim();
+            const phone = document.getElementById("user-phone").value.trim();
+
+            if (!name || !phone) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            try {
+                const url = currentEditId ? `/users/${currentEditId}` : "/users";
+                const method = currentEditId ? "PUT" : "POST";
+
+                await fetch(url, {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, phone }),
+                });
+
+                formModal.hide();
+                loadData();
+            } catch (error) {
+                console.error('Error submitting form:', error);
+            }
+        };
+
+        const editUser = async (id) => {
+            try {
+                const response = await fetch(`/users/${id}`);
+                const user = await response.json();
+
+                currentEditId = id;
+                document.getElementById("user-name").value = user.name;
+                document.getElementById("user-phone").value = user.phone;
+                formModal.show();
+            } catch (error) {
+                console.error('Error fetching user:', error);
+            }
+        };
+
+        const confirmDelete = (id) => {
+            currentDeleteId = id;
+            deleteModal.show();
+        };
+
+        const handleDelete = async () => {
+            if (!currentDeleteId) return;
+
+            try {
+                await fetch(`/users/${currentDeleteId}`, { method: "DELETE" });
+                deleteModal.hide();
+                loadData();
+            } catch (error) {
+                console.error('Error deleting user:', error);
+            }
+        };
+
+        const goToTodos = (userId) => {
+            window.location.href = `/users/${userId}/todos`;
+        };
+    </script>
 </body>
-
 </html>

@@ -25,7 +25,6 @@ module.exports = function (db) {
             } = req.query;
 
             const pageInt = parseInt(page) || 1;
-
             let params = {};
 
             if (title) {
@@ -53,10 +52,9 @@ module.exports = function (db) {
             }
 
             const userId = new ObjectId(req.params.userId);
-            params.userId = userId;
+            params.executor = userId;
 
             const count = await Todo.countDocuments(params);
-
             const limit = 10;
             const offset = limit * (pageInt - 1);
             const pages = Math.ceil(count / limit);
@@ -69,9 +67,14 @@ module.exports = function (db) {
                 .skip(offset)
                 .sort(sortParams)
                 .toArray();
-            res
-                .status(200)
-                .json({ data: todo, total: count, pages, page: pageInt, limit });
+                
+            res.status(200).json({ 
+                data: todo, 
+                total: count, 
+                pages, 
+                page: pageInt, 
+                limit 
+            });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
@@ -83,7 +86,7 @@ module.exports = function (db) {
 
             const todo = await Todo.findOne({
                 _id: new ObjectId(id),
-                userId: new ObjectId(userId),
+                executor: new ObjectId(userId),
             });
 
             if (!todo) {
@@ -101,7 +104,7 @@ module.exports = function (db) {
             const { title } = req.body;
 
             if (!title) {
-                throw Error("Title is required!");
+                throw new Error("Title is required!");
             }
 
             const deadline = new Date();
@@ -111,7 +114,7 @@ module.exports = function (db) {
                 title,
                 deadline,
                 complete: false,
-                userId: new ObjectId(req.params.userId),
+                executor: new ObjectId(req.params.userId),
             };
 
             const result = await Todo.insertOne(todo);
@@ -137,7 +140,7 @@ module.exports = function (db) {
             await Todo.updateOne({ _id }, { $set: updatedData });
             const todo = await Todo.findOne({ _id });
 
-            if (!todo) throw Error("Todo not exist!");
+            if (!todo) throw new Error("Todo not exist!");
 
             res.status(201).json(todo);
         } catch (error) {
@@ -149,9 +152,10 @@ module.exports = function (db) {
         try {
             const { id } = req.params;
             const _id = new ObjectId(id);
+            
             const todo = await Todo.findOne({ _id });
-
-            if (!todo) throw Error("Todo not exist!");
+            if (!todo) throw new Error("Todo not exist!");
+            
             await Todo.deleteOne({ _id });
 
             res.status(201).json(todo);
@@ -161,4 +165,4 @@ module.exports = function (db) {
     });
 
     return router;
-};
+};  

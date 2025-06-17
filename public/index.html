@@ -163,6 +163,17 @@
             elements.search.addEventListener("keypress", handleSearchKeypress);
             elements.deleteBtn.addEventListener("click", handleDelete);
 
+            // Event listener untuk modal close - reset state ketika modal ditutup
+            const formModalElement = document.getElementById('modalForm');
+            if (formModalElement) {
+                formModalElement.addEventListener('hidden.bs.modal', function () {
+                    // Reset state ketika modal ditutup tanpa submit
+                    if (currentEditId) {
+                        resetFormState();
+                    }
+                });
+            }
+
             loadData();
         });
 
@@ -191,158 +202,172 @@
             loadData();
         };
 
-        const openAddForm = () => {
+const openAddForm = () => {
             currentEditId = null;
-            document.getElementById("user-form").reset();
+            
+            const form = document.getElementById("user-form");
+            if (form) {
+                form.reset();
+                
+                document.getElementById("user-name").value = "";
+                document.getElementById("user-phone").value = "";
+            }
+            
+            const modalTitle = document.querySelector("#modalForm .modal-title");
+            if (modalTitle) {
+                modalTitle.textContent = "Add User";
+            }
+            
+            const submitBtn = document.querySelector("#user-form button[type='submit']");
+            if (submitBtn) {
+                submitBtn.textContent = "Add User";
+            }
+            
             formModal.show();
         };
 
-        const loadData = async () => {
-            try {
-                const response = await fetch(`/users?${new URLSearchParams(params)}`);
-                const result = await response.json();
+const loadData = async () => {
+    try {
+        const response = await fetch(`/users?${new URLSearchParams(params)}`);
+        const result = await response.json();
 
-                renderTable(result.data, result.offset || 0);
-                renderPagination(result.pages, result.page);
-                renderInfo(result);
+        renderTable(result.data, result.offset || 0);
+        renderPagination(result.pages, result.page);
+        renderInfo(result);
 
-                params.page = result.page;
-                params.pages = result.pages;
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-        };
+        params.page = result.page;
+        params.pages = result.pages;
+    } catch (error) {
+        console.error('Error loading data:', error);
+    }
+};
 
-        // rendering
-        const renderTable = (data, offset = 0) => {
-            const tableBody = document.getElementById("table-body");
+// rendering
+const renderTable = (data, offset = 0) => {
+    const tableBody = document.getElementById("table-body");
 
-            if (!data?.length) {
-                tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
-                return;
-            }
+    if (!data?.length) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No data available</td></tr>';
+        return;
+    }
 
-            tableBody.innerHTML = data.map((user, index) => `
-                <tr>
-                    <td>${offset + index + 1}</td>
-                    <td>${user.name}</td>
-                    <td>${user.phone}</td>
-                    <td>
-                        <button type="button" class="btn btn-success p-2 me-1" onclick="editUser('${user._id}')">
-                            <i class="fa-solid fa-pencil"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger p-2 me-1" onclick="confirmDelete('${user._id}')">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                        <button type="button" class="btn btn-warning p-2" onclick="goToTodos('${user._id}')">
-                            <i class="fa-solid fa-right-to-bracket"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+    tableBody.innerHTML = data.map((user, index) => 
+        `<tr>
+            <td>${offset + index + 1}</td>
+            <td>${user.name}</td>
+            <td>${user.phone}</td>
+            <td>
+                <button type="button" class="btn btn-success p-2 me-1" onclick="editUser('${user._id}')">
+                    <i class="fa-solid fa-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-danger p-2 me-1" onclick="confirmDelete('${user._id}')">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+                <button type="button" class="btn btn-warning p-2" onclick="goToTodos('${user._id}')">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+            </td>
+        </tr>`
+    ).join('');
 
-            renderTableHeader();
-        };
+    renderTableHeader();
+};
 
-        const renderTableHeader = () => {
-            const getSortIcon = (field) => {
-                if (params.sortBy !== field) return "fa-sort";
-                return params.sortMode === "asc" ? "fa-sort-up" : "fa-sort-down";
-            };
+const renderTableHeader = () => {
+    const getSortIcon = (field) => {
+        if (params.sortBy !== field) return "fa-sort";
+        return params.sortMode === "asc" ? "fa-sort-up" : "fa-sort-down";
+    };
 
-            document.getElementById("table-header").innerHTML = `
-                <tr>
-                    <th>No.</th>
-                    <th>
-                        <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('name')">
-                            Name <i class="fa-solid ${getSortIcon("name")}"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('phone')">
-                            Phone <i class="fa-solid ${getSortIcon("phone")}"></i>
-                        </a>
-                    </th>
-                    <th>Actions</th>
-                </tr>
-            `;
-        };
+    document.getElementById("table-header").innerHTML = 
+        `<tr>
+            <th>No.</th>
+            <th>
+                <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('name')">
+                    Name <i class="fa-solid ${getSortIcon("name")}"></i>
+                </a>
+            </th>
+            <th>
+                <a href="javascript:void(0)" class="text-decoration-none text-dark" onclick="handleSort('phone')">
+                    Phone <i class="fa-solid ${getSortIcon("phone")}"></i>
+                </a>
+            </th>
+            <th>Actions</th>
+        </tr>`;
+};
 
-        const renderPagination = (totalPages, currentPage) => {
-            const pagination = document.getElementById("pagination");
+const renderPagination = (totalPages, currentPage) => {
+    const pagination = document.getElementById("pagination");
 
-            if (!totalPages || totalPages <= 1) {
-                pagination.innerHTML = "";
-                return;
-            }
+    if (!totalPages || totalPages <= 1) {
+        pagination.innerHTML = "";
+        return;
+    }
 
-            const createPageButton = (page, text, isActive = false) => `
-                <li class="page-item ${isActive ? "active" : ""}">
-                    <button class="page-link" onclick="changePage(${page})">${text}</button>
-                </li>
-            `;
+    const createPageButton = (page, text, isActive = false) => 
+        `<li class="page-item ${isActive ? "active" : ""}">
+            <button class="page-link" onclick="changePage(${page})">${text}</button>
+        </li>`;
 
-            let html = "";
+    let html = "";
 
-            // previous
-            if (currentPage > 1) {
-                html += `
-                    <li class="page-item">
-                        <button class="page-link" onclick="changePage(${currentPage - 1})" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </button>
-                    </li>
-                `;
-            }
+    // previous
+    if (currentPage > 1) {
+        html += 
+            `<li class="page-item">
+                <button class="page-link" onclick="changePage(${currentPage - 1})" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </button>
+            </li>`;
+    }
 
-            // page 
-            for (let i = 1; i <= totalPages; i++) {
-                html += createPageButton(i, i, i === currentPage);
-            }
+    // page 
+    for (let i = 1; i <= totalPages; i++) {
+        html += createPageButton(i, i, i === currentPage);
+    }
 
-            // next
-            if (currentPage < totalPages) {
-                html += `
-                    <li class="page-item">
-                        <button class="page-link" onclick="changePage(${currentPage + 1})" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </button>
-                    </li>
-                `;
-            }
+    // next
+    if (currentPage < totalPages) {
+        html += 
+            `<li class="page-item">
+                <button class="page-link" onclick="changePage(${currentPage + 1})" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </button>
+            </li>`;
+    }
 
-            pagination.innerHTML = html;
-        };
+    pagination.innerHTML = html;
+};
 
-        const renderInfo = (result) => {
-            const info = document.getElementById("info");
-            const { total = 0, page = 1, limit } = result;
+const renderInfo = (result) => {
+    const info = document.getElementById("info");
+    const { total = 0, page = 1, limit } = result;
 
-            if (total === 0) {
-                info.textContent = "No entries to show.";
-                return;
-            }
+    if (total === 0) {
+        info.textContent = "No entries to show.";
+        return;
+    }
 
-            if (limit <= 0) {
-                info.textContent = `Showing 1 to ${total} of ${total} entries`;
-                return;
-            }
+    if (limit <= 0) {
+        info.textContent = `Showing 1 to ${total} of ${total} entries`;
+        return;
+    }
 
-            const start = (page - 1) * parseInt(limit) + 1;
-            const end = Math.min(page * parseInt(limit), total);
-            info.textContent = `Showing ${start} to ${end} of ${total} entries`;
-        }
+    const start = (page - 1) * parseInt(limit) + 1;
+    const end = Math.min(page * parseInt(limit), total);
+    info.textContent = `Showing ${start} to ${end} of ${total} entries`;
+};
 
-        const handleSort = (field) => {
-            params.sortBy = field;
-            params.sortMode = params.sortMode === "asc" ? "desc" : "asc";
-            loadData();
-        };
+const handleSort = (field) => {
+    params.sortBy = field;
+    params.sortMode = params.sortMode === "asc" ? "desc" : "asc";
+    loadData();
+};
 
-        const changePage = (page) => {
-            params.page = page;
-            loadData();
-        };
+const changePage = (page) => {
+    params.page = page;
+    loadData();
+};
 
         // crud
         const handleFormSubmit = async (e) => {
@@ -360,14 +385,20 @@
                 const url = currentEditId ? `/users/${currentEditId}` : "/users";
                 const method = currentEditId ? "PUT" : "POST";
 
-                await fetch(url, {
+                const response = await fetch(url, {
                     method,
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ name, phone }),
                 });
 
-                formModal.hide();
-                loadData();
+                if (response.ok) {
+                    formModal.hide();
+                    // Reset state setelah sukses
+                    resetFormState();
+                    loadData();
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
             } catch (error) {
                 console.error('Error submitting form:', error);
             }
@@ -376,29 +407,54 @@
         const editUser = async (id) => {
             try {
                 const response = await fetch(`/users/${id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const user = await response.json();
 
+                // Set state untuk edit mode
                 currentEditId = id;
-                document.getElementById("user-name").value = user.name;
-                document.getElementById("user-phone").value = user.phone;
+                
+                // Populate form dengan data user
+                document.getElementById("user-name").value = user.name || "";
+                document.getElementById("user-phone").value = user.phone || "";
+                
+                // Update UI untuk edit mode
+                const modalTitle = document.querySelector("#modalForm .modal-title");
+                if (modalTitle) {
+                    modalTitle.textContent = "Edit User";
+                }
+                
+                const submitBtn = document.querySelector("#user-form button[type='submit']");
+                if (submitBtn) {
+                    submitBtn.textContent = "Update User";
+                }
+                
                 formModal.show();
             } catch (error) {
                 console.error('Error fetching user:', error);
             }
         };
 
-        const confirmDelete = (id) => {
-            currentDeleteId = id;
-            deleteModal.show();
-        };
+const confirmDelete = (id) => {
+    currentDeleteId = id;
+    deleteModal.show();
+};
 
         const handleDelete = async () => {
             if (!currentDeleteId) return;
 
             try {
-                await fetch(`/users/${currentDeleteId}`, { method: "DELETE" });
-                deleteModal.hide();
-                loadData();
+                const response = await fetch(`/users/${currentDeleteId}`, { method: "DELETE" });
+                
+                if (response.ok) {
+                    deleteModal.hide();
+                    currentDeleteId = null; // Reset state
+                    loadData();
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
             } catch (error) {
                 console.error('Error deleting user:', error);
             }
@@ -407,6 +463,29 @@
         const goToTodos = (userId) => {
             window.location.href = `/users/${userId}/todos`;
         };
+
+        const resetFormState = () => {
+            currentEditId = null;
+            
+            // Reset form
+            const form = document.getElementById("user-form");
+            if (form) {
+                form.reset();
+                document.getElementById("user-name").value = "";
+                document.getElementById("user-phone").value = "";
+            }
+            
+            const modalTitle = document.querySelector("#modalForm .modal-title");
+            if (modalTitle) {
+                modalTitle.textContent = "Add User";
+            }
+            
+            const submitBtn = document.querySelector("#user-form button[type='submit']");
+            if (submitBtn) {
+                submitBtn.textContent = "Add User";
+            }
+        };
+
     </script>
 </body>
 </html>

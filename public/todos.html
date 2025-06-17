@@ -277,7 +277,6 @@
 
         const saveData = () => {
             if (editedId) {
-                // update existing todo
                 const todoTitle = $('#title-edit').val();
                 const todoDeadline = moment($('#deadline-edit').val()).toISOString();
                 const todoComplete = $('#complete-edit').is(':checked');
@@ -291,10 +290,21 @@
                         deadline: todoDeadline,
                         complete: todoComplete
                     }),
-                    success: function () {
+                    success: function (response) {
+                        formModal.hide();
+
+                        updateTodoItemUI(editedId, {
+                            title: todoTitle,
+                            deadline: todoDeadline,
+                            complete: todoComplete
+                        });
+
+                        editedId = null;
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('Error updating todo:', error);
                         formModal.hide();
                         editedId = null;
-                        loadData(true);
                     }
                 });
             } else {
@@ -312,6 +322,41 @@
                     }
                 });
             }
+        };
+
+        const updateTodoItemUI = (todoId, todoData) => {
+            const currentTime = moment();
+            const deadlineTime = moment(todoData.deadline);
+            let alertClass = "dark";
+
+            if (todoData.complete) {
+                alertClass = "success";
+            } else if (deadlineTime.isBefore(currentTime)) {
+                alertClass = "danger";
+            }
+
+            const newHtml = `
+                            <div class="alert alert-${alertClass} d-flex justify-content-between align-items-center mb-3">
+                                    ${deadlineTime.format("DD-MM-YYYY HH:mm")} ${todoData.title}
+                                    <div>
+                                        <button class="btn btn-sm" onclick="editData('${todoId}')"><i class="fa-solid fa-pencil"></i></button>
+                                        <button class="btn btn-sm" onclick="deletedData('${todoId}')"><i class="fa-solid fa-trash"></i></button>
+                                    </div>
+                                </div>
+                            `;
+
+            $('#sentinel').prevAll().each(function () {
+                const $element = $(this);
+                const editButton = $element.find('button[onclick*="editData"]');
+                if (editButton.length > 0) {
+                    const onclickValue = editButton.attr('onclick');
+                    const currentId = onclickValue.match(/'([^']+)'/)[1];
+                    if (currentId === todoId) {
+                        $element.replaceWith(newHtml);
+                        return false; 
+                    }
+                }
+            });
         };
 
         const deletedData = (todoId) => {
